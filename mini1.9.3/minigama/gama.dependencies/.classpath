@@ -26,7 +26,6 @@
 	</classpathentry>
 	<classpathentry exported="true" kind="lib" path="moeaframework-2.13.jar" sourcepath="moeaframework-2.13.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/bigint-0.7.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="geotools/ehcache-2.10.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/imageio-ext-cog-streams-1.3.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/imageio-ext-cog-commons-1.3.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/imageio-ext-cog-reader-1.3.5.jar"/>
@@ -42,8 +41,6 @@
 	<classpathentry exported="true" kind="lib" path="geotools/net.opengis.fes-25.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/net.opengis.ows-25.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/net.opengis.wfs-25.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="geotools/ojdbc8-19.10.0.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="geotools/jcc-11.5.5.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-xml-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-xsd-core-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-xsd-fes-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
@@ -75,9 +72,6 @@
 	<classpathentry exported="true" kind="lib" path="geotools/gt-geotiff-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-grid-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-jdbc-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
-	<classpathentry exported="true" kind="lib" path="geotools/gt-jdbc-db2-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
-	<classpathentry exported="true" kind="lib" path="geotools/gt-jdbc-mysql-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
-	<classpathentry exported="true" kind="lib" path="geotools/gt-jdbc-oracle-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-jdbc-postgis-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-main-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-metadata-25.0.jar" sourcepath="geotools/geotools-25.0-src.zip"/>
@@ -144,9 +138,7 @@
 	<classpathentry exported="true" kind="lib" path="geotools/jt-warp-1.1.20.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/jt-zonal-1.1.20.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/jt-zonalstats-1.6.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="geotools/mysql-connector-java-8.0.22.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/postgresql-42.2.19.jar"/>
-	<classpathentry exported="true" kind="lib" path="geotools/sqlite-jdbc-3.34.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="geotools/gt-http-commons-25.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="protobuf-java-3.6.1.jar"/>

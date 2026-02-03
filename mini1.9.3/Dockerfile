@@ -1,6 +1,6 @@
 ARG VCS_REF
 
-FROM eclipse-temurin:21-jre-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 RUN apk add --no-cache tar
 
@@ -9,22 +9,31 @@ RUN mkdir -p /tmp/gama && \
     tar -xzf /tmp/gama.tar.gz -C /tmp/gama && \
     rm /tmp/gama.tar.gz
 
-RUN rm -rf /tmp/gama/p2
+RUN rm -rf /tmp/gama/p2 /tmp/gama/features /tmp/gama/Gama /tmp/gama/icon.icns /tmp/gama/icon.xpm /tmp/gama/artifacts.xml
 
 RUN find /tmp/gama -name "*.jar" -exec sh -c 'jar tf "$1" | grep -q "org/eclipse/swt\|org/eclipse/ui" && rm "$1"' _ {} \;
 
+RUN rm -f /tmp/gama/plugins/org.eclipse.help.* \
+    /tmp/gama/plugins/org.eclipse.debug.* \
+    /tmp/gama/plugins/org.eclipse.team.* \
+    /tmp/gama/plugins/org.eclipse.ui.intro* \
+    /tmp/gama/plugins/org.eclipse.update.* \
+    /tmp/gama/plugins/org.junit* \
+    /tmp/gama/plugins/org.hamcrest* \
+    /tmp/gama/plugins/org.apache.sshd*
+
 RUN rm -rf /tmp/gama/configuration/*.xml \
-    /tmp/gama/configuration/*.ini \
     /tmp/gama/configuration/*.properties \
     /tmp/gama/configuration/org.eclipse.osgi* \
-    /tmp/gama/configuration/org.eclipse.equinox* \
     /tmp/gama/configuration/org.eclipse.core* \
-    /tmp/gama/configuration/.settings
+    /tmp/gama/configuration/.settings \
+    /tmp/gama/configuration/org.eclipse.update && \
+    echo "org.osgi.framework.bootdelegation=org.w3c.dom.*" >> /tmp/gama/headless/configuration/config.ini
 
 RUN rm -rf /tmp/custom-jre && \
     mkdir -p /tmp && \
     /opt/java/openjdk/bin/jlink \
-    --add-modules java.base,java.desktop,java.instrument,java.management,java.naming,java.prefs,java.rmi,java.sql,java.xml,java.net.http,jdk.unsupported \
+    --add-modules java.base,java.desktop,java.instrument,java.management,java.naming,java.rmi,java.sql,java.xml,java.net.http,jdk.unsupported \
     --strip-debug \
     --no-man-pages \
     --no-header-files \
