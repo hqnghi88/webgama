@@ -1,0 +1,125 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven {
+			url = "https://plugins.gradle.org/m2/"
+		}
+	}
+	dependencies {
+		classpath 'org.xtext:xtext-gradle-plugin:4.0.0'
+		classpath 'com.github.node-gradle:gradle-node-plugin:7.1.0'
+		classpath 'net.researchgate:gradle-release:3.1.0'
+	}
+}
+
+apply plugin: 'net.researchgate.release'
+
+
+// Configuration for Xtext projects
+configure(subprojects.findAll { it.name.startsWith('org.xtext') }) {
+	ext.xtextVersion = '2.41.0'
+	repositories {
+		mavenCentral()
+	}
+	
+	apply plugin: 'java-library'
+	dependencies {
+		api platform("org.eclipse.xtext:xtext-dev-bom:${xtextVersion}")
+	}
+	apply plugin: 'org.xtext.xtend'
+	apply from: "${rootDir}/gradle/source-layout.gradle"
+	apply plugin: 'eclipse'
+	apply plugin: 'idea'
+	
+	group = 'org.xtext.example.mydsl'
+	version = '1.0.0-SNAPSHOT'
+	
+	java {
+		sourceCompatibility = JavaVersion.VERSION_21
+		targetCompatibility = JavaVersion.VERSION_21
+	}
+	
+	configurations.all {
+		exclude group: 'asm'
+	}
+
+}
+
+// Configuration for vscode projects
+configure(subprojects.findAll { it.name.startsWith('vscode') }) {
+
+	apply plugin: 'com.github.node-gradle.node'
+	node {
+		version = '20.18.2'
+		npmVersion = '10.8.2'
+		download = true
+	}
+
+	def inputFiles = fileTree(
+		dir: projectDir, 
+		excludes: [ 'out/**', '.gitignore', '.gradle/**', 'build/**', '*.gradle' ]
+	)
+
+	npmInstall {
+		inputs.files(inputFiles)
+		outputs.dir('out')
+	}
+
+	task vscodeExtension(dependsOn: [npmInstall], type: NodeTask) {
+		ext.destDir = new File(buildDir, 'vscode')
+		ext.archiveName = "$project.name-${project.version}.vsix"
+		ext.destPath = "$destDir/$archiveName"
+		outputs.dir destDir
+		doFirst {
+			destDir.mkdirs()
+		}
+		script = file("node_modules/.bin/vsce")
+		args = [ 'package', '--out', destPath ]
+		execOverrides {
+			workingDir = projectDir
+		}
+	}
+
+	task clean {
+		doLast {
+			delete vscodeExtension.destDir
+			delete 'out' // output of npmInstall - don't want to delete node_modules
+		}
+		
+	}
+
+}
+
+plugins.withType(com.github.gradle.node.NodePlugin) {
+	node {
+		workDir = file("$rootProject.buildDir/nodejs")
+	}
+}
+
+updateVersion {
+		doLast {
+			// custom code
+			def versionPattern = /\d+.\d+(.\d+)?/
+			def encoding = 'UTF-8'
+			def filesToUpdate = [
+				new File('vscode-extension', 'package.json'),
+				new File('vscode-extension-self-contained', 'package.json'),
+			]
+
+			// String replacements - isn't long enough to justify advanced code ;)
+			filesToUpdate.forEach { file ->
+
+				String text = file.getText(encoding)
+				text = text.replaceAll("\"version\": \"$versionPattern\",", "\"version\": \"$project.version\",")
+				file.setText(text, encoding)
+			}
+		}
+	}
+
+release {
+    tagTemplate = 'v${version}'
+	preTagCommitMessage = '[release] pre tag commit: '
+    tagCommitMessage = '[release] creating tag: '
+    newVersionCommitMessage = '[release] new version commit: '
+    failOnSnapshotDependencies = false
+}

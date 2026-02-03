@@ -1,0 +1,63 @@
+{
+	"name": "GAML",
+    "scopeName": "text.gaml",
+    "fileTypes": [
+        "gaml"
+    ],
+    "repository": {
+        "general": {
+            "patterns": [
+                {
+                    "include": "#linecomment"
+                },
+                {
+                    "include": "#blockcomment"
+                },
+                {
+                    "include": "#keyword"
+                },
+                {
+                    "include": "#string"
+                },
+                {
+                    "include": "#number"
+                }
+            ]
+        },
+        "linecomment": {
+            "name": "comment.line.double-slash.gaml",
+            "begin": "(^[ \\t]+)?(?=//)",
+			"end": "(?=$)"
+        },
+        "blockcomment": {
+            "name": "comment.block.gaml",
+            "begin": "/\\*(\\*)?(?!/)",
+			"end": "\\*/"
+        },
+        "keyword": {
+            "name": "keyword.control.gaml",
+            "match": "\\b(species|global|environment|experiment|setup|reflex|action|loop|if|else|for|while|do|return|break|continue|import|export|let|var|const|int|float|bool|string|point|geometry|list|map|matrix|file|image|rgb|agent|simulation|model|skill|aspect|display|grid|graph|network|chart|monitor|parameter|output|input|create|ask|with|as|in|of|to|by|at|on|over|under|above|below|near|far|inside|outside|within|without|contains|belongs|part|member|element|item|value|key|pair|tuple|set|bag|sequence|range|interval|duration|date|time|step|cycle|tick|seed|random|uniform|gaussian|poisson|binomial|exponential|lognormal|weibull|beta|gamma|chi|student|fisher|normal|abs|sqrt|pow|exp|log|ln|sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|floor|ceil|round|truncate|mod|rem|div|mul|add|sub|inc|dec|min|max|sum|prod|avg|mean|median|mode|var|std|dev|skew|kurt|corr|cov|rank|sort|shuffle|reverse|unique|duplicate|first|last|head|tail|take|drop|split|join|merge|concat|append|prepend|insert|remove|replace|find|search|match|filter|select|reject|collect|map|fold|reduce|apply|call|invoke|execute|run|start|stop|pause|resume|reset|restart|reload|refresh|update|synchronize|initialize|finalize|terminate|kill|destroy|delete|save|load|read|write|print|display|show|hide|draw|render|plot|animate|play|record|capture|snapshot|screenshot|video|audio|sound|music|voice|speech|text|font|style|color|size|shape|form|pattern|texture|material|light|shadow|reflection|refraction|transparency|opacity|brightness|contrast|saturation|hue|gamma|exposure|blur|sharpen|smooth|rough|hard|soft|warm|cool|bright|dark|light|heavy|strong|weak|fast|slow|quick|rapid|swift|steady|stable|unstable|dynamic|static|fixed|flexible|rigid|elastic|plastic|solid|liquid|gas|plasma|matter|energy|force|power|work|heat|temperature|pressure|volume|mass|weight|density|concentration|viscosity|friction|resistance|conductance|capacitance|inductance|voltage|current|charge|field|magnetic|electric|gravity|quantum|classical|relativistic|absolute|relative|positive|negative|true|false|null|undefined|void|self|this|super|parent|child|root|leaf|node|edge|vertex|face|surface|area|perimeter|length|width|height|depth|thickness|radius|diameter|circumference|angle|degree|radian|gradient|slope|aspect|orientation|direction|position|location|coordinate|origin|center|middle|average|typical|standard|normal|regular|irregular|random|deterministic|stochastic|probabilistic|statistical|empirical|theoretical|practical|experimental|simulated|virtual|real|actual|expected|predicted|estimated|approximate|exact|precise|accurate|inaccurate|correct|incorrect|valid|invalid|true|false|yes|no|on|off|up|down|left|right|forward|backward|north|south|east|west|northeast|northwest|southeast|southwest|center|middle|top|bottom|front|back|inside|outside|above|below|over|under|through|across|along|around|between|among|within|without|beyond|behind|before|after|during|since|until|when|where|how|why|what|which|who|whom|whose|whatever|whichever|whoever|whomever|however|whenever|wherever|whereas|whereby|wherein|thereof|thereby|therefore|therefrom|thereto|therewith|hereby|herein|hereof|hereto|herewith|whereby|wherein|whereof|whereto|wherewith|thus|hence|therefore|consequently|accordingly|according|as|like|unlike|similar|different|same|identical|equal|unequal|greater|less|more|less|higher|lower|bigger|smaller|larger|tiny|huge|enormous|massive|minute|micro|macro|mega|giga|tera|peta|exa|zetta|yotta|kilo|hecto|deca|deci|centi|milli|micro|nano|pico|femto|atto|zepto|yocto)\\b"
+        },
+        "string": {
+            "name": "string.quoted.double.gaml",
+            "begin": "\"",
+            "end": "\"",
+            "patterns": [
+                {
+                    "name": "constant.character.escape.gaml",
+                    "match": "\\\\."
+                }
+            ]
+        },
+        "number": {
+            "name": "constant.numeric.gaml",
+            "match": "\\b([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?\\b"
+        }
+    },
+    "patterns": [
+        {
+            "include": "#general"
+        }
+    ],
+    "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}

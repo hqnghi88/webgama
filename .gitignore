@@ -86,3 +86,61 @@ frontend/node_modules
 frontend/build
 frontend/.env
 */build/* 
+
+
+
+# Node
+xtextlsp/node_modules
+
+# Xtext / Xtend
+xtextlsp/model
+xtextlsp/src-gen
+xtextlsp/xtend-gen
+xtextlsp/.antlr*.jar
+
+# Eclipse
+xtextlsp/.classpath
+xtextlsp/.project
+xtextlsp/.settings/
+xtextlsp/.metadata/
+xtextlsp/bin/
+
+# IntelliJ
+xtextlsp/*.iml
+xtextlsp/*.ipr
+xtextlsp/*.iws
+xtextlsp/.idea/
+xtextlsp/out/
+
+# Gradle
+xtextlsp/.gradle/
+xtextlsp/build/
+xtextlsp/!gradle-wrapper.jar
+xtextlsp/gamalsp/*.icloud
+xtextlsp/gamalsp/*.gamlbin
+xtextlsp/gamalsp/*.experimentbin
+xtextlsp/gamalsp/*.log
+xtextlsp/gamalsp/target/
+xtextlsp/gamalsp/*.orig
+xtextlsp/gamalsp/build/ 
+xtextlsp/gamalsp/dist/
+xtextlsp/gamalsp/private/
+xtextlsp/gamalsp/release/
+xtextlsp/gamalsp/*.iml
+xtextlsp/gamalsp/*.ipr
+xtextlsp/gamalsp/*.iws
+xtextlsp/gamalsp/*.iml
+xtextlsp/gamalsp/.idea/
+xtextlsp/gamalsp/*~
+xtextlsp/gamalsp/*.bak
+xtextlsp/gamalsp/.directory
+xtextlsp/gamalsp/.DS_Store
+xtextlsp/gamalsp/*.history
+xtextlsp/gamalsp/*.class
+xtextlsp/gamalsp/.metadata/
+xtextlsp/gamalsp/*/gaml/
+xtextlsp/gamalsp/*/bin/
+xtextlsp/gamalsp/gama.dependencies/lib/
+xtextlsp/gamalsp/.__*
+xtextlsp/gamalsp/*/.tycho-consumer-pom.xml
+xtextlsp/gamalsp/**/org.eclipse.jdt.core.prefs 

@@ -1,0 +1,74 @@
+{
+    "name": "gaml-vscode-extension",
+    "displayName": "GAML Language Support",
+    "description": "GAML (GAMA Modeling Language) support for VS Code",
+    "version": "0.0.32",
+    "publisher": "gama",
+    "icon": "images/xtext.png",
+    "license": "EPL-1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/xtext/xtext-languageserver-example.git"
+    },
+    "bugs": {
+        "url": "https://github.com/xtext/xtext-languageserver-example/issues"
+    },
+    "engines": {
+        "vscode": "^1.103.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "activationEvents": [
+        "onLanguage:gaml"
+    ],
+    "main": "out/extension",
+    "contributes": {
+        "languages": [
+            {
+                "id": "gaml",
+                "aliases": [
+                    "gaml",
+                    "GAML"
+                ],
+                "extensions": [
+                    ".gaml"
+                ],
+                "configuration": "./gaml.configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "gaml",
+                "scopeName": "text.gaml",
+                "path": "./syntaxes/gaml.tmLanguage.json"
+            }
+        ],
+        "commands": [
+            {
+                "command": "gaml.a.proxy",
+                "title": "GAML Command A"
+            },
+            {
+                "command": "gaml.b",
+                "title": "GAML Command B"
+            }
+        ]
+    },
+    "devDependencies": {
+        "@types/node": "^20.19.30",
+        "@types/vscode": "^1.103.0",
+        "typescript": "^5.9.3",
+        "@vscode/test-electron": "^2.5.2",
+        "@vscode/vsce": "^3.7.1"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.1"
+    },
+    "scripts": {
+        "prepublish": "tsc -p ./src",
+        "compile": "tsc -p ./src",
+        "watch": "tsc -w -p ./src",
+        "update-vscode": "node ./node_modules/vscode/bin/install"
+    }
+}

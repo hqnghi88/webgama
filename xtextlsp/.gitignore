@@ -1,0 +1,55 @@
+# Node
+node_modules
+
+# Xtext / Xtend
+model
+src-gen
+xtend-gen
+.antlr*.jar
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+bin/
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+gamalsp/*.icloud
+gamalsp/*.gamlbin
+gamalsp/*.experimentbin
+gamalsp/*.log
+gamalsp/target/
+gamalsp/*.orig
+gamalsp/build/ 
+gamalsp/dist/
+gamalsp/private/
+gamalsp/release/
+gamalsp/*.iml
+gamalsp/*.ipr
+gamalsp/*.iws
+gamalsp/*.iml
+gamalsp/.idea/
+gamalsp/*~
+gamalsp/*.bak
+gamalsp/.directory
+gamalsp/.DS_Store
+gamalsp/*.history
+gamalsp/*.class
+gamalsp/.metadata/
+gamalsp/*/gaml/
+gamalsp/*/bin/
+gamalsp/gama.dependencies/lib/
+gamalsp/.__*
+gamalsp/*/.tycho-consumer-pom.xml
+gamalsp/**/org.eclipse.jdt.core.prefs
