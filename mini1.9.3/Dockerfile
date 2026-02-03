@@ -44,19 +44,21 @@ FROM alpine:latest
 
 ARG VCS_REF
 
-RUN apk add --no-cache bash libstdc++ libc6-compat fontconfig ttf-dejavu
+RUN apk add --no-cache bash libstdc++ libc6-compat fontconfig ttf-dejavu openjdk17-jre
 
 COPY --from=builder /tmp/gama /opt/gama-platform
 COPY --from=builder /tmp/custom-jre /opt/jre
+
+COPY mini1.9.3/springboot/target/demo-0.0.1-SNAPSHOT.jar /opt/gama-platform/server.jar
 
 RUN sed -i 's/$( dirname "${BASH_SOURCE\[0\]}" )/\/opt\/gama-platform\/headless/g' /opt/gama-platform/headless/gama-headless.sh && \
     chmod +x /opt/gama-platform/headless/gama-headless.sh && \
     ln -s /opt/gama-platform/headless/gama-headless.sh /usr/sbin/gama-headless
 
-ENV JAVA_HOME=/opt/jre
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ENV PATH=$JAVA_HOME/bin:$PATH
+ENV GAMA_PATH=/opt/gama-platform/headless/gama-headless.sh
 
-WORKDIR /opt/gama-platform/headless
+EXPOSE 8080
 
-ENTRYPOINT ["gama-headless"]
-CMD ["-validate"]
+ENTRYPOINT ["sh", "-c", "java -jar /opt/gama-platform/server.jar"]

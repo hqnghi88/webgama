@@ -69,3 +69,20 @@ client/build
 */minigama/.__*
 */minigama/*/.tycho-consumer-pom.xml
 */minigama/**/org.eclipse.jdt.core.prefs
+*/frontend/node_modules 
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+*.class
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+.DS_Store
+
+# Frontend
+frontend/node_modules
+frontend/build
+frontend/.env
+*/build/* 
