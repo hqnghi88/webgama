@@ -1,17 +1,17 @@
 {
-    "name": "xtext-vscode-example",
-    "displayName": "Xtext VS Code example",
-    "description": "A simple DSL example for VS Code",
+    "name": "gaml-extension",
+    "displayName": "GAML",
+    "description": "GAML language support for VS Code with bundled GAMA headless server",
     "version": "0.0.33",
-    "publisher": "xtext",
+    "publisher": "hqnghi",
     "icon": "images/xtext.png",
     "license": "EPL-1.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/xtext/xtext-languageserver-example.git"
+        "url": "https://github.com/hqnghi/webgama"
     },
     "bugs": {
-        "url": "https://github.com/xtext/xtext-languageserver-example/issues"
+        "url": "https://github.com/hqnghi/webgama/issues"
     },
     "engines": {
         "vscode": "^1.103.0"
