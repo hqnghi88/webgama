@@ -1,9 +1,8 @@
-model test_model
+model test_valid_model
 
 global {
-	// Global variables
 	int number_of_agents <- 10;
-	string model_name <- "Test GAML Model";
+	string model_name <- "Test Valid GAML Model";
 	
 	init {
 		write "Model " + model_name + " initialized";
@@ -11,18 +10,15 @@ global {
 }
 
 species test_agent {
-	// Agent attributes
-	f loat energy <- rnd(100);
+	float energy <- rnd(100);
 	point location <- {rnd(100), rnd(100)};
 	
-	// Reflex that runs every step
 	reflex move when: energy > 0 {
 		location <- location + {rnd(2) - 1, rnd(2) - 1};
 		energy <- energy - 0.1;
 	}
 	
-	// Agent aspect for visualization
-	asp ect base {
+	aspect base {
 		draw circle(1) color: #blue;
 	}
 }

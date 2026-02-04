@@ -2,7 +2,7 @@
     "name": "gaml-vscode-extension",
     "displayName": "GAML Language Support",
     "description": "GAML (GAMA Modeling Language) support for VS Code",
-    "version": "0.0.32",
+    "version": "0.0.33",
     "publisher": "gama",
     "icon": "images/xtext.png",
     "license": "EPL-1.0",

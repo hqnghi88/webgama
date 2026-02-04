@@ -1,5 +1,5 @@
 model test_model
-
+ 
 global {
 	// Global variables
 	int number_of_agents <- 10;
@@ -10,12 +10,12 @@ global {
 	}
 }
 
-species test_agent
+species test_agent skills: [moving] {
 	// Missing opening brace - syntax error!
 	float energy <- rnd(100);
 	point location <- {rnd(100), rnd(100)};
 	
-	// Reflex that runs every step
+	// Reflex that runs every step 
 	reflex move when: energy > 0 {
 		location <- location + {rnd(2) - 1, rnd(2) - 1};
 		energy <- energy - 0.1;
@@ -27,7 +27,7 @@ species test_agent
 	}
 }
 
-exp eriment main_experiment {
+experiment main_experiment {
 	output {
 		display map_display {
 			species test_agent aspect: base;

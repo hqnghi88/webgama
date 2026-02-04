@@ -66,6 +66,7 @@ import gama.headless.xml.Reader;
 import gama.headless.xml.XMLWriter;
 import gaml.compiler.GamlStandaloneSetup;
 import gaml.compiler.gaml.validation.GamlModelBuilder;
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 
 /**
  * The Class Application.
@@ -765,6 +766,17 @@ public class HeadlessApplication implements IApplication {
 	}
 
 	/**
+	 * Escape JSON string.
+	 *
+	 * @param s the string to escape
+	 * @return the escaped string
+	 */
+	private static String escapeJson(String s) {
+		if (s == null) return "";
+		return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
+	}
+
+	/**
 	 * Validate a single GAML file for compilation errors.
 	 *
 	 * @param pathToGamlFile
@@ -772,14 +784,11 @@ public class HeadlessApplication implements IApplication {
 	 */
 	public void validateGamlFile(final String pathToGamlFile) {
 		assertIsAModelFile(pathToGamlFile);
-		
-		DEBUG.ON();
-		DEBUG.LOG("Validating GAML file: " + pathToGamlFile);
-		
+
 		// Use the pre-configured injector that has proper workspace access
 		final Injector injector = getInjector();
 		final GamlModelBuilder builder = new GamlModelBuilder(injector);
-		
+
 		final List<GamlCompilationError> errors = new ArrayList<>();
 		URI uri;
 		try {
@@ -787,31 +796,38 @@ public class HeadlessApplication implements IApplication {
 		} catch (Exception e) {
 			uri = URI.createURI(pathToGamlFile);
 		}
-		
-		final IModel mdl = builder.compile(uri, errors);
-		
-		if (mdl == null) {
-			DEBUG.ERR("GAML file compilation FAILED.");
-			if (errors.isEmpty()) {
-				DEBUG.ERR("Unknown compilation error occurred.");
-			} else {
-				DEBUG.ERR("Found " + errors.size() + " compilation error(s):");
-				for (GamlCompilationError error : errors) {
-					DEBUG.ERR("  - " + error.toString());
+
+		builder.compile(uri, errors);
+
+		StringBuilder json = new StringBuilder();
+		json.append("{");
+		json.append("\"file\": \"").append(escapeJson(pathToGamlFile)).append("\",");
+		json.append("\"diagnostics\": [");
+
+		for (int i = 0; i < errors.size(); i++) {
+			GamlCompilationError error = errors.get(i);
+			json.append("{");
+			json.append("\"severity\": \"")
+					.append(error.isError() ? "error" : (error.isWarning() ? "warning" : "info")).append("\",");
+			json.append("\"message\": \"").append(escapeJson(error.toString())).append("\",");
+
+			int line = 1;
+			try {
+				if (error.getStatement() != null) {
+					org.eclipse.xtext.nodemodel.ICompositeNode node =
+							NodeModelUtils.getNode(error.getStatement());
+					if (node != null) { line = node.getStartLine(); }
 				}
-			}
-			System.exit(1);
-		} else {
-			if (errors.isEmpty()) {
-				DEBUG.LOG("GAML file compilation SUCCESSFUL - no errors found.");
-			} else {
-				DEBUG.LOG("GAML file compilation SUCCESSFUL but with " + errors.size() + " warning(s):");
-				for (GamlCompilationError error : errors) {
-					DEBUG.LOG("  - " + error.toString());
-				}
-			}
-			System.exit(0);
+			} catch (Exception e) {}
+			json.append("\"line\": ").append(line);
+			json.append("}");
+			if (i < errors.size() - 1) { json.append(","); }
 		}
+		json.append("]");
+		json.append("}");
+
+		System.out.println(json.toString());
+		System.exit(0);
 	}
 
  }

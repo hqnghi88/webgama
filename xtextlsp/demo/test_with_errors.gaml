@@ -10,7 +10,7 @@ global {
 	}
 }
 
-species test_agent skill:[moving] {
+species test_agent  
 	// Agent attributes
 	f loat energy <- rnd(100);
 	point location <- {rnd(100), rnd(100)};
@@ -19,7 +19,7 @@ species test_agent skill:[moving] {
 	reflex move when: energy > 0 {
 		location <- location + {rnd(2) - 1, rnd(2) - 1};
 		energy <- energy - 0.1;
-	}
+	} 
 	
 	// Agent aspect for visualization
 	aspect base {

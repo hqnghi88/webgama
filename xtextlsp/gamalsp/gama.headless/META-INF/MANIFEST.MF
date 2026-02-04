@@ -6,7 +6,8 @@ Bundle-Version: 0.0.0.qualifier
 Require-Bundle: gama.core,
  gaml.compiler,
  org.eclipse.core.runtime,
- gama.dependencies
+ gama.dependencies,
+ org.eclipse.xtext
 Bundle-ActivationPolicy: lazy
 Export-Package: 
  gama.headless.common,
