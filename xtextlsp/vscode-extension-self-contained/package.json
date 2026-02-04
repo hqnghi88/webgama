@@ -68,6 +68,8 @@
         "prepublish": "tsc -p ./src",
         "compile": "tsc -p ./src",
         "watch": "tsc -w -p ./src",
-        "update-vscode": "node ./node_modules/vscode/bin/install"
+        "update-vscode": "node ./node_modules/vscode/bin/install",
+        "package-self-contained:x64": "bash ./scripts/package-self-contained.sh x64",
+        "package-self-contained:arm64": "bash ./scripts/package-self-contained.sh arm64"
     }
 }

@@ -2,6 +2,7 @@
 
 import * as path from 'path';
 import * as os from 'os';
+import * as fs from 'fs';
 
 import {Trace} from 'vscode-jsonrpc';
 import { commands, window, workspace, ExtensionContext, Uri } from 'vscode';
@@ -10,9 +11,23 @@ import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-lan
 let lc: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-    // The server is a locally installed in src/mydsl
-    let launcher = os.platform() === 'win32' ? 'mydsl-standalone.bat' : 'mydsl-standalone';
-    let script = context.asAbsolutePath(path.join('src', 'mydsl', 'bin', launcher));
+    let bundledServerPath = context.asAbsolutePath(path.join('server'));
+    let script: string;
+
+    if (fs.existsSync(bundledServerPath)) {
+        let headlessPath = path.join(bundledServerPath, 'Gama.app', 'Contents', 'headless');
+        let launcher = os.platform() === 'win32' ? 'gama-headless.bat' : 'gama-headless.sh';
+        script = path.join(headlessPath, launcher);
+        if (os.platform() !== 'win32') {
+            try {
+                fs.chmodSync(script, '755');
+            } catch (e) {
+            }
+        }
+    } else {
+        let launcher = os.platform() === 'win32' ? 'mydsl-standalone.bat' : 'mydsl-standalone';
+        script = context.asAbsolutePath(path.join('src', 'mydsl', 'bin', launcher));
+    }
 
     let serverOptions: ServerOptions = {
         run : { command: script },

@@ -144,3 +144,4 @@ xtextlsp/gamalsp/gama.dependencies/lib/
 xtextlsp/gamalsp/.__*
 xtextlsp/gamalsp/*/.tycho-consumer-pom.xml
 xtextlsp/gamalsp/**/org.eclipse.jdt.core.prefs 
+xtextlsp/vscode-extension-self-contained/server/Gama.app
