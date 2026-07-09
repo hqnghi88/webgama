@@ -19,7 +19,7 @@ npx tsc -p src/tsconfig.json
 echo "=== Step 5: Package VSIX ==="
 rm -rf "$EXTENSION_DIR/server"
 cd "$EXTENSION_DIR"
-bash scripts/package-self-contained.sh arm64
+bash scripts/package-self-contained.sh darwin-arm64
 
 echo ""
 echo "=== Done ==="

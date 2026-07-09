@@ -70,7 +70,9 @@
         "compile": "tsc -p ./src",
         "watch": "tsc -w -p ./src",
         "update-vscode": "node ./node_modules/vscode/bin/install",
-        "package-self-contained:x64": "bash ./scripts/package-self-contained.sh x64",
-        "package-self-contained:arm64": "bash ./scripts/package-self-contained.sh arm64"
+        "package-self-contained:darwin-arm64": "bash ./scripts/package-self-contained.sh darwin-arm64",
+        "package-self-contained:darwin-x64": "bash ./scripts/package-self-contained.sh darwin-x64",
+        "package-self-contained:linux-x64": "bash ./scripts/package-self-contained.sh linux-x64",
+        "package-self-contained:win32-x64": "bash ./scripts/package-self-contained.sh win32-x64"
     }
 }
