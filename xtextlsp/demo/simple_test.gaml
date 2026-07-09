@@ -7,7 +7,7 @@ global {
 		write "Simple test model initialized";
 		create test_agent;  
 		ask test_agent {
-			do toto;  
+			do toto();  
 		}    
 	} 
 }  

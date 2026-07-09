@@ -14,7 +14,7 @@ global {
 species test_agent {  
 	// Agent attributes 
 	float energy <- rnd(100.0);
-	action toto{
+	action toto() {
 
 	}
 	// Reflex that runs every step

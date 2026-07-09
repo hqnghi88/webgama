@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
@@ -123,6 +125,10 @@ public class GamlValidationService {
 							NodeModelUtils.getNode(error.source());
 					if (node != null) { line = node.getStartLine(); }
 				}
+				// Xtext syntax diagnostics embed the true line in toString() as "TYPE: URI:LINE".
+				// When URI is null (temporary resource), match "null:LINE" from the message.
+				Matcher m = Pattern.compile("null:(\\d+)\\s").matcher(error.message());
+				if (m.find()) { line = Integer.parseInt(m.group(1)); }
 			} catch (Exception e) {}
 			json.append("\"line\": ").append(line);
 			json.append("}");
