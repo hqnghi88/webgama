@@ -40,17 +40,39 @@ export function activate(context: ExtensionContext) {
         }
     });
 
+    function getHeadlessScriptPath(bundledServerPath: string): string | null {
+        const platform = process.platform;
+        if (platform === 'darwin') {
+            let p = path.join(bundledServerPath, 'Gama.app', 'Contents', 'headless', 'gama-lsp.sh');
+            if (fs.existsSync(p)) return p;
+            p = path.join(bundledServerPath, 'headless', 'gama-lsp.sh');
+            if (fs.existsSync(p)) return p;
+        } else if (platform === 'linux') {
+            let p = path.join(bundledServerPath, 'headless', 'gama-lsp.sh');
+            if (fs.existsSync(p)) return p;
+        } else if (platform === 'win32') {
+            let p = path.join(bundledServerPath, 'headless', 'gama-lsp.bat');
+            if (fs.existsSync(p)) return p;
+        }
+        return null;
+    }
+
+    function spawnScript(scriptPath: string, args: string[], options: cp.SpawnOptions): cp.ChildProcess {
+        const platform = process.platform;
+        if (platform === 'win32') {
+            return cp.spawn('cmd.exe', ['/c', scriptPath, ...args], options);
+        }
+        return cp.spawn('sh', [scriptPath, ...args], options);
+    }
+
     function startGamaServer(context: ExtensionContext) {
         let bundledServerPath = context.asAbsolutePath(path.join('server'));
-        let headlessPath: string;
+        let headlessPath: string | null = null;
 
         if (fs.existsSync(bundledServerPath)) {
-            let arch = os.arch() === 'arm64' ? 'aarch64' : 'x86_64';
-            let potentialPath = path.join(bundledServerPath, 'Gama.app', 'Contents', 'headless', 'gama-lsp.sh');
-            if (fs.existsSync(potentialPath)) {
-                headlessPath = potentialPath;
-            } else {
-                console.log('Bundled GAMA headless not found at:', potentialPath);
+            headlessPath = getHeadlessScriptPath(bundledServerPath);
+            if (!headlessPath) {
+                console.log('Bundled GAMA headless script not found in:', bundledServerPath);
                 return;
             }
         } else {
@@ -65,7 +87,7 @@ export function activate(context: ExtensionContext) {
 
         console.log('Starting persistent GAMA validation server...');
 
-        gamaProcess = cp.spawn('sh', [headlessPath, '-validate-server'], {
+        gamaProcess = spawnScript(headlessPath, ['-validate-server'], {
             cwd: context.asAbsolutePath('.'),
             stdio: ['pipe', 'pipe', 'pipe']
         });
@@ -191,14 +213,11 @@ export function activate(context: ExtensionContext) {
 
     function validateOneShot(document: TextDocument, diagnosticCollection: any) {
         let bundledServerPath = context.asAbsolutePath(path.join('server'));
-        let headlessPath: string;
+        let headlessPath: string | null = null;
 
         if (fs.existsSync(bundledServerPath)) {
-            let arch = os.arch() === 'arm64' ? 'aarch64' : 'x86_64';
-            let potentialPath = path.join(bundledServerPath, 'Gama.app', 'Contents', 'headless', 'gama-lsp.sh');
-            if (fs.existsSync(potentialPath)) {
-                headlessPath = potentialPath;
-            } else {
+            headlessPath = getHeadlessScriptPath(bundledServerPath);
+            if (!headlessPath) {
                 diagnosticCollection.set(document.uri, [{
                     severity: DiagnosticSeverity.Error,
                     range: new Range(new Position(0, 0), new Position(0, 0)),
@@ -224,7 +243,7 @@ export function activate(context: ExtensionContext) {
 
         // Write in-memory content to temp file so the server sees the latest edits
         const tempFile = getTempFileForDocument(document);
-        const child = cp.spawn('sh', [headlessPath, '-validate-gaml', tempFile], {
+        const child = spawnScript(headlessPath, ['-validate-gaml', tempFile], {
             cwd: path.dirname(tempFile)
         });
 

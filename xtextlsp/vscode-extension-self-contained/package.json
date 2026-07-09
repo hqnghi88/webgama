@@ -3,7 +3,7 @@
     "displayName": "GAML",
     "description": "GAML language support for VS Code with bundled GAMA headless server",
     "version": "0.0.33",
-    "publisher": "hqnghi",
+    "publisher": "HuynhQuangNghi",
     "icon": "images/xtext.png",
     "license": "EPL-1.0",
     "repository": {
