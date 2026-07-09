@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: GAMA LSP Service
+Bundle-SymbolicName: gama.lsp;singleton:=true
+Bundle-Version: 0.0.0.qualifier
+Require-Bundle: gama.core,
+ gaml.compiler,
+ org.eclipse.core.runtime,
+ gama.dependencies,
+ org.eclipse.xtext
+Bundle-ActivationPolicy: lazy
+Export-Package: gama.lsp
+Import-Package: com.google.inject
+Bundle-ClassPath: .
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Automatic-Module-Name: gama.lsp

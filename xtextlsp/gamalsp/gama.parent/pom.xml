@@ -160,6 +160,7 @@
 		-->
 
 		<module>../gama.headless</module>
+		<module>../gama.lsp</module>
 		<!--
 			Extra modules
 		<module>../gama.library</module>

@@ -67,4 +67,8 @@
          id="gama.dependencies"
          version="0.0.0"/>
 
+   <plugin
+         id="gama.lsp"
+         version="0.0.0"/>
+
 </feature>
