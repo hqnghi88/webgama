@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Databases
+Bundle-SymbolicName: gama.extension.database;singleton:=true
+Bundle-Version: 0.0.0.qualifier
+Require-Bundle: gama.dependencies,
+ gama.core,
+ org.eclipse.osgi
+Export-Package: gama.extension.database.gaml.skills,
+ gama.extension.database.gaml.species,
+ gama.extension.database.utils,
+ gama.extension.database.utils.sql
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-25
+Bundle-Activator: gama.extension.database.DatabaseActivator
+Automatic-Module-Name: gama.extension.database
+Bundle-ClassPath: .,
+ libs/SPARQL/jena 5.5.0/jena-arq-5.5.0.jar,
+ libs/SPARQL/jena 5.5.0/jena-base-5.5.0.jar,
+ libs/SPARQL/jena 5.5.0/jena-core-5.5.0.jar,
+ libs/SPARQL/jena 5.5.0/jena-iri-5.5.0.jar,
+ libs/SPARQL/libthrift-0.22.0.jar,
+ libs/SPARQL/caffeine-3.2.3.jar,
+ libs/SPARQL/com.google.gson-2.9.1.jar

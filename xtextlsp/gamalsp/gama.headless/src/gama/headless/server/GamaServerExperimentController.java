@@ -3,36 +3,32 @@
  * GamaServerExperimentController.java, in gama.headless, is part of the source code of the GAMA modeling and simulation
  * platform (v.2025-03).
  *
- * (c) 2007-2025 UMI 209 UMMISCO IRD/SU & Partners (IRIT, MIAT, ESPACE-DEV, CTU)
+ * (c) 2007-2026 UMI 209 UMMISCO IRD/SU & Partners (IRIT, MIAT, ESPACE-DEV, CTU)
  *
  * Visit https://github.com/gama-platform/gama for license information and contacts.
  *
  ********************************************************************************************************/
 package gama.headless.server;
 
-import java.io.IOException;
-
 import org.java_websocket.WebSocket;
 
-import gama.core.kernel.experiment.AbstractExperimentController;
-import gama.core.kernel.experiment.ExperimentAgent;
-import gama.core.kernel.experiment.IExperimentAgent;
-import gama.core.kernel.simulation.SimulationAgent;
-import gama.core.runtime.GAMA;
-import gama.core.runtime.IExperimentStateListener;
-import gama.core.runtime.IScope;
-import gama.core.runtime.concurrent.GamaExecutorService;
-import gama.core.runtime.exceptions.GamaRuntimeException;
-import gama.core.runtime.server.CommandResponse;
-import gama.core.runtime.server.GamaServerExperimentConfiguration;
-import gama.core.runtime.server.GamaServerMessage;
-import gama.core.runtime.server.MessageType;
-import gama.core.util.IList;
-import gama.core.util.IMap;
-import gama.core.util.file.json.Json;
+import gama.api.GAMA;
+import gama.api.exceptions.GamaRuntimeException;
+import gama.api.gaml.types.Cast;
+import gama.api.kernel.simulation.AbstractExperimentController;
+import gama.api.kernel.simulation.IExperimentAgent;
+import gama.api.kernel.simulation.IExperimentStateListener;
+import gama.api.kernel.simulation.ISimulationAgent;
+import gama.api.runtime.GamaExecutorService;
+import gama.api.runtime.scope.IExecutionResult;
+import gama.api.runtime.scope.IScope;
+import gama.api.types.list.IList;
+import gama.api.types.map.IMap;
+import gama.api.utils.server.CommandResponse;
+import gama.api.utils.server.GamaServerExperimentConfiguration;
+import gama.api.utils.server.GamaServerMessage;
+import gama.api.utils.server.MessageType;
 import gama.dev.DEBUG;
-import gama.gaml.compilation.GamaCompilationFailedException;
-import gama.gaml.operators.Cast;
 
 /**
  * The Class ExperimentController.
@@ -78,12 +74,12 @@ public class GamaServerExperimentController extends AbstractExperimentController
 
 				while (experimentAlive) {
 					if (mexp.simulator.isInterrupted()) { break; }
-					final SimulationAgent sim = mexp.simulator.getSimulation();
+					final ISimulationAgent sim = mexp.simulator.getSimulation();
 					final IExperimentAgent exp = mexp.simulator.getExperimentPlan().getAgent();
 					final IScope scope = sim == null ? exp.getScope() : sim.getScope();
 					if (Cast.asBool(scope, exp.getStopCondition().value(scope))) {
 						if (!"".equals(stopCondition)) {
-							mexp.socket.send(Json.getNew()
+							mexp.socket.send(GAMA.getJsonEncoder()
 									.valueOf(new CommandResponse(MessageType.SimulationEnded, "",
 											(IMap<String, Object>) exp.getAttribute("%%playCommand%%"), false))
 									.toString());
@@ -129,16 +125,15 @@ public class GamaServerExperimentController extends AbstractExperimentController
 	 */
 	@Override
 	protected boolean processUserCommand(final ExperimentCommand command) {
-		switch (command) {
+		switch (command.type()) {
 			case _OPEN:
 				try {
-					_job.loadAndBuildWithJson(parameters, stopCondition);
+					return _job.loadAndBuildWithJson(parameters, stopCondition).passed();	
 				} catch (Exception e) {
 					DEBUG.OUT(e);
 					GAMA.reportError(scope, GamaRuntimeException.create(e, scope), true);
 					return false;
 				}
-				return true;
 			case _START:
 				paused = false;
 				lock.release();
@@ -147,13 +142,17 @@ public class GamaServerExperimentController extends AbstractExperimentController
 				paused = true;
 				return true;
 			case _STEP:
-				previouslock.acquire();
-				paused = true;
-				lock.release();
+				for(int i = 0; i < command.quantity(); i++) {
+					previouslock.acquire();
+					paused = true;
+					lock.release();					
+				}
 				return true;
 			case _BACK:
-				paused = true;
-				experiment.getAgent().backward(getScope());
+				for(int i = 0; i < command.quantity(); i++) {
+					paused = true;
+					experiment.getAgent().backward(getScope());
+				}
 				return true;
 			case _RELOAD:
 				try {
@@ -187,13 +186,13 @@ public class GamaServerExperimentController extends AbstractExperimentController
 				GAMA.updateExperimentState(experiment, IExperimentStateListener.State.NOTREADY);
 				getScope().getGui().closeDialogs(getScope());
 				// Dec 2015 This method is normally now called from
-				// ExperimentPlan.dispose()
+				// ExperimentSpecies.dispose()
 			} finally {
 				acceptingCommands = false;
 				experimentAlive = false;
 				lock.release();
 				GAMA.updateExperimentState(experiment, IExperimentStateListener.State.NONE);
-				if (commandThread != null && commandThread.isAlive()) { commands.offer(ExperimentCommand._CLOSE); }
+				if (commandThread != null && commandThread.isAlive()) { commands.offer(_CLOSE_CMD); }
 			}
 		}
 	}
@@ -232,17 +231,21 @@ public class GamaServerExperimentController extends AbstractExperimentController
 	 *            the agent
 	 */
 	@Override
-	public void schedule(final ExperimentAgent agent) {
+	public IExecutionResult schedule(final IExperimentAgent agent) {
 		scope = agent.getScope();
 		serverConfiguration = serverConfiguration.withExpId(_job.getExperimentID());
 		scope.setServerConfiguration(serverConfiguration);
+		IExecutionResult res = IExecutionResult.FAILED;
 		try {
-			if (!scope.init(agent).passed()) { scope.setDisposeStatus(); }
+			res = scope.init(agent);
+			if (!res.passed()) { scope.setDisposeStatus(); }
+			
 		} catch (final Throwable e) {
 			if (scope != null && scope.interrupted()) {} else if (!(e instanceof GamaRuntimeException)) {
 				GAMA.reportError(scope, GamaRuntimeException.create(e, scope), true);
 			}
 		}
+		return res;
 	}
 
 	/**
@@ -255,32 +258,37 @@ public class GamaServerExperimentController extends AbstractExperimentController
 		}
 		try {
 			_job.doStep();
-		} catch (RuntimeException e) {
-//			e.printStackTrace();
-			serverConfiguration.socket().send(Json.getNew().valueOf(new GamaServerMessage(MessageType.RuntimeError, e)).toString());
-		}finally {
+		} catch (Throwable e) {
+			// e.printStackTrace();
+			serverConfiguration.socket()
+					.send(GAMA.getJsonEncoder().valueOf(new GamaServerMessage(MessageType.RuntimeError, e)).toString());
+		} finally {
 			previouslock.release();
 		}
 	}
 
 	@Override
-	public boolean processStep(final boolean andWait) {
-		paused = true;
-		if (andWait) {
-			_job.doStep();
-			return true;
-		}
-		return super.processStep(andWait);
+	public boolean processStep(final int nbSteps, final boolean andWait) {
+//			paused = true;
+//			if (andWait) {
+//				for(int i = 0 ; i < nbSteps; i++) {
+//					_job.doStep();				
+//				}
+//				return true;
+//			}
+			return super.processStep(nbSteps, andWait);			
 	}
 
 	@Override
-	public boolean processBack(final boolean andWait) {
+	public boolean processBack(final int nbSteps, final boolean andWait) {
 		paused = true;
 		if (andWait) {
-			_job.doBackStep();
+			for(int i = 0; i < nbSteps; i++) {
+				_job.doBackStep();				
+			}
 			return true;
 		}
-		return super.processBack(andWait);
+		return super.processBack(nbSteps, andWait);
 	}
 
 }

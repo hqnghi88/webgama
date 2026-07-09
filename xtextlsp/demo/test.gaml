@@ -13,8 +13,7 @@ global {
     
 species test_agent {  
 	// Agent attributes 
-	float energy <- rnd(100);
-	point location <- {rnd(100), rnd(100)}; 
+	float energy <- rnd(100.0);
 	action toto{
 
 	}

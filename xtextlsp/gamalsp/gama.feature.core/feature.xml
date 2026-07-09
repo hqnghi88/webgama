@@ -32,15 +32,17 @@
       <import plugin="org.eclipse.equinox.p2.metadata"/>
       <import plugin="org.eclipse.equinox.p2.operations"/>
       <import plugin="org.eclipse.equinox.p2.engine"/>
-      <!-- <import plugin="gama.extension.traffic"/> -->
-      <!-- <import plugin="gama.extension.database"/> -->
-      <!-- <import plugin="gama.extension.network"/> -->
+      <import plugin="gama.extension.traffic"/>
+      <import plugin="gama.extension.database"/>
+      <import plugin="gama.extension.network"/>
       <import plugin="org.eclipse.xtext"/>
       <import plugin="org.eclipse.xtext.util"/>
       <import plugin="org.eclipse.emf.common"/>
       <import plugin="org.eclipse.xtext.xbase.lib"/>
-      <!-- <import plugin="gama.extension.maths"/> -->
+      <import plugin="gama.extension.maths"/>
+      <import plugin="gama.extension.batch"/>
       <import plugin="gama.dependencies"/>
+      <import plugin="gama.workspace"/>
    </requires>
 
    <plugin
@@ -64,11 +66,23 @@
          version="0.0.0"/>
 
    <plugin
-         id="gama.dependencies"
+         id="gama.extension.stats"
          version="0.0.0"/>
 
    <plugin
-         id="gama.lsp"
+         id="gama.extension.batch"
+         version="0.0.0"/>
+
+   <plugin
+         id="gama.dev"
+         version="0.0.0"/>
+
+   <plugin
+         id="gama.api"
+         version="0.0.0"/>
+
+   <plugin
+         id="gama.workspace"
          version="0.0.0"/>
 
 </feature>

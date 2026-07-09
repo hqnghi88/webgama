@@ -3,7 +3,7 @@
  * HeadlessApplication.java, in gama.headless, is part of the source code of the GAMA modeling and simulation platform
  * (v.2025-03).
  *
- * (c) 2007-2025 UMI 209 UMMISCO IRD/SU & Partners (IRIT, MIAT, ESPACE-DEV, CTU)
+ * (c) 2007-2026 UMI 209 UMMISCO IRD/SU & Partners (IRIT, MIAT, ESPACE-DEV, CTU)
  *
  * Visit https://github.com/gama-platform/gama for license information and contacts.
  *
@@ -12,12 +12,10 @@ package gama.headless.runtime;
 
 import static gama.headless.runtime.GamaHeadlessWebSocketServer.startForSecureHeadless;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,18 +38,19 @@ import org.w3c.dom.Document;
 
 import com.google.inject.Injector;
 
-import gama.core.common.GamlFileExtension;
-import gama.core.common.preferences.GamaPreferences;
-import gama.core.kernel.experiment.IExperimentPlan;
-import gama.core.kernel.model.IModel;
-import gama.core.runtime.GAMA;
-import gama.core.runtime.NullGuiHandler;
-import gama.core.runtime.concurrent.GamaExecutorService;
-import gama.core.runtime.exceptions.GamaRuntimeException;
-import gama.core.runtime.server.IGamaServer;
+import gama.api.GAMA;
+import gama.api.compilation.GamlCompilationError;
+import gama.api.constants.GamlFileExtension;
+import gama.api.exceptions.GamaCompilationFailedException;
+import gama.api.exceptions.GamaRuntimeException;
+import gama.api.kernel.species.IExperimentSpecies;
+import gama.api.kernel.species.IModelSpecies;
+import gama.api.runtime.GamaExecutorService;
+import gama.api.runtime.SystemInfo;
+import gama.api.ui.NullGuiHandler;
+import gama.api.utils.prefs.GamaPreferences;
+import gama.api.utils.server.IGamaServer;
 import gama.dev.DEBUG;
-import gama.gaml.compilation.GamaCompilationFailedException;
-import gama.gaml.compilation.GamlCompilationError;
 import gama.headless.batch.ModelLibraryRunner;
 import gama.headless.batch.ModelLibraryTester;
 import gama.headless.batch.ModelLibraryValidator;
@@ -62,14 +61,14 @@ import gama.headless.core.GamaHeadlessException;
 import gama.headless.job.ExperimentJob;
 import gama.headless.job.IExperimentJob;
 import gama.headless.script.ExperimentationPlanFactory;
-import gama.headless.server.GamaServerGUIHandler;
+import gama.headless.server.GamaHeadlessServerGUIEventHandler;
 import gama.headless.xml.ConsoleReader;
 import gama.headless.xml.Reader;
 import gama.headless.xml.XMLWriter;
+import gama.core.CoreActivator;
+import gama.workspace.WorkspaceActivator;
 import gaml.compiler.GamlStandaloneSetup;
-import gaml.compiler.gaml.resource.GamlResourceServices;
-import gaml.compiler.gaml.validation.GamlModelBuilder;
-import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
+import gaml.compiler.validation.GamlModelBuilder;
 
 /**
  * The Class Application.
@@ -94,19 +93,30 @@ public class HeadlessApplication implements IApplication {
 	 * @return the injector
 	 */
 	private static Injector configureInjector() {
-		if (INJECTOR != null) {
-			return INJECTOR;
-		}
+		if (INJECTOR != null) return INJECTOR;
 		DEBUG.LOG("GAMA configuring and loading...");
 		System.setProperty("java.awt.headless", "true");
 		GAMA.setHeadLessMode(isServer);
-		GAMA.setHeadlessGui(isServer ? new GamaServerGUIHandler() : new NullGuiHandler());
+		GAMA.setHeadlessGui(isServer ? new GamaHeadlessServerGUIEventHandler() : new NullGuiHandler());
+		// Trigger gama.workspace lazy activation so WorkspaceActivator registers the workspace
+		WorkspaceActivator.load();
 		try {
-			// We initialize XText and Gaml.
+			// Activate gaml.compiler (registers ArtefactFactory and other GAML factories).
 			INJECTOR = GamlStandaloneSetup.doSetup();
 		} catch (final Exception e1) {
 			throw GamaRuntimeException.create(e1, GAMA.getRuntimeScope());
 		}
+		// Activate gama.core AFTER gaml.compiler so that GamaBundleLoader.buildContributions()
+		// finds the ArtefactFactory already registered when it loads GamlAdditions.
+		// This synchronously initialises all GAML types (Types.MAP, Types.AGENT, …).
+		CoreActivator.load();
+		// Eagerly instantiate BuiltinGlobalScopeProvider and any other Xtext singletons whose
+		// constructors read from the fully-loaded GAMA metamodel (Types, GamaMetaModel, …).
+		// This mirrors what EditorActivator does for the GUI: the injector is only asked for
+		// those singletons after all bundle activators have run and the platform is complete.
+		// Without this call they would be created lazily by Guice during the first model
+		// validation, which could race against a future async buildContributions() executor.
+		GamlStandaloneSetup.initializeAfterPlatformReady(INJECTOR);
 		// SEED HACK // WARNING AD : Why ?
 		GamaPreferences.External.CORE_SEED_DEFINED.set(true);
 		GamaPreferences.External.CORE_SEED.set(1.0);
@@ -178,12 +188,6 @@ public class HeadlessApplication implements IApplication {
 	/** The Constant GAML_PARAMETER. */
 	final public static String GAML_PARAMETER = "-gaml";
 
-	/** The Constant VALIDATE_GAML_PARAMETER. */
-	final public static String VALIDATE_GAML_PARAMETER = "-validate-gaml";
-
-	/** The Constant VALIDATE_SERVER_PARAMETER. */
-	final public static String VALIDATE_SERVER_PARAMETER = "-validate-server";
-
 	/** The Constant WRITE_XMI. */
 	final public static String WRITE_XMI = "-write-xmi";
 
@@ -214,7 +218,7 @@ public class HeadlessApplication implements IApplication {
 	 */
 	private static void showVersion() {
 		DEBUG.ON();
-		DEBUG.LOG("Welcome to Gama-platform.org version " + GAMA.VERSION + "\n");
+		DEBUG.LOG("Welcome to Gama-platform.org version " + SystemInfo.VERSION + "\n");
 		DEBUG.OFF();
 	}
 
@@ -225,7 +229,7 @@ public class HeadlessApplication implements IApplication {
 		showVersion();
 		DEBUG.ON();
 		DEBUG.LOG("sh ./gama-headless.sh [Options]\n" + "\nList of available options:" + "\n\t=== Headless Options ==="
-				+ "\n\t\t-m [mem]                      -- allocate memory (ex 2048m)" 
+				+ "\n\t\t-m [mem]                      -- allocate memory (ex 2048m)"
 				+ "\n\t\t-ws [./path/to/ws]            -- manually set a workspace" + "\n\t\t" + CONSOLE_PARAMETER
 				+ "                            -- start the console to write xml parameter file" + "\n\t\t"
 				+ VERBOSE_PARAMETER + "                            -- verbose mode" + "\n\t\t" + THREAD_PARAMETER
@@ -241,9 +245,7 @@ public class HeadlessApplication implements IApplication {
 				+ "\n\t\t" + VALIDATE_LIBRARY_PARAMETER
 				+ "                     -- invokes GAMA to validate models present in built-in library and plugins"
 				+ "\n\t\t" + TEST_LIBRARY_PARAMETER
-				+ "                         -- invokes GAMA to execute tests present in built-in library and plugins and display their results"
-				+ "\n\t\t" + VALIDATE_GAML_PARAMETER
-				+ " [gamlFile.gaml]               -- validate a single GAML file for compilation errors"
+				+ "                         -- invokes GAMA to execute the tests present in built-in library and plugins and display their results"
 				+ "\n\t=== GAMA Headless Runner ===" + "\n\t\t" + SOCKET_PARAMETER
 				+ " [socketPort]          -- starts socket pipeline to interact with another framework" + "\n\t\t"
 				+ BATCH_PARAMETER + " [experimentName] [modelFile.gaml]"
@@ -316,8 +318,7 @@ public class HeadlessApplication implements IApplication {
 		// Commands
 		// ========================
 		if (args.contains(WRITE_XMI) || args.contains(GAMA_VERSION) || args.contains(HELP_PARAMETER)
-				|| args.contains(VALIDATE_LIBRARY_PARAMETER) || args.contains(TEST_LIBRARY_PARAMETER)
-				|| args.contains(VALIDATE_GAML_PARAMETER) || args.contains(VALIDATE_SERVER_PARAMETER)) {
+				|| args.contains(VALIDATE_LIBRARY_PARAMETER) || args.contains(TEST_LIBRARY_PARAMETER)) {
 			size = size - 1;
 			mustContainOutFolder = mustContainInFile = false;
 		}
@@ -329,21 +330,15 @@ public class HeadlessApplication implements IApplication {
 			size = size - 4;
 			mustContainInFile = mustContainOutFolder = false;
 		}
-		if (args.contains(VALIDATE_GAML_PARAMETER)) {
-			size = size - 2;
-			mustContainOutFolder = false;
-		}
 
 		if (args.contains(GAML_PARAMETER)) { size = size - 2; }
 
 		// Runner verification
 		// ========================
-		if (mustContainInFile && mustContainOutFolder && size < 2) {
+		if (mustContainInFile && mustContainOutFolder && size < 2)
 			return showError(HeadLessErrors.INPUT_NOT_DEFINED, null);
-		}
-		if (!mustContainInFile && mustContainOutFolder && size < 1) {
+		if (!mustContainInFile && mustContainOutFolder && size < 1)
 			return showError(HeadLessErrors.OUTPUT_NOT_DEFINED, null);
-		}
 
 		// In/out files
 		// ========================
@@ -351,22 +346,18 @@ public class HeadlessApplication implements IApplication {
 			// Check and create output folder
 			Globals.OUTPUT_PATH = args.get(args.size() - 1);
 			final File output = new File(Globals.OUTPUT_PATH);
-			if (!output.exists() && !output.mkdir()) {
+			if (!output.exists() && !output.mkdir())
 				return showError(HeadLessErrors.PERMISSION_ERROR, Globals.OUTPUT_PATH);
-			}
 			// Check and create output image folder
 			Globals.IMAGES_PATH = Globals.OUTPUT_PATH + "/snapshot";
 			final File images = new File(Globals.IMAGES_PATH);
-			if (!images.exists() && !images.mkdir()) {
+			if (!images.exists() && !images.mkdir())
 				return showError(HeadLessErrors.PERMISSION_ERROR, Globals.IMAGES_PATH);
-			}
 		}
 		if (mustContainInFile) {
 			final int inIndex = args.size() - (mustContainOutFolder ? 2 : 1);
 			final File input = new File(args.get(inIndex));
-			if (!input.exists()) {
-				return showError(HeadLessErrors.NOT_EXIST_FILE_ERROR, args.get(inIndex));
-			}
+			if (!input.exists()) return showError(HeadLessErrors.NOT_EXIST_FILE_ERROR, args.get(inIndex));
 		}
 		return true;
 	}
@@ -435,14 +426,6 @@ public class HeadlessApplication implements IApplication {
 		if (args.contains(VALIDATE_LIBRARY_PARAMETER)) return ModelLibraryValidator.getInstance().start();
 		if (args.contains(TEST_LIBRARY_PARAMETER)) return ModelLibraryTester.getInstance().start();
 		if (args.contains(RUN_LIBRARY_PARAMETER)) return ModelLibraryRunner.getInstance().start();
-		if (args.contains(VALIDATE_GAML_PARAMETER)) {
-			validateGamlFile(args.get(args.size() - 1));
-			System.exit(0);
-		}
-		if (args.contains(VALIDATE_SERVER_PARAMETER)) {
-			validateServer();
-			return null;
-		}
 		if (args.contains(CHECK_MODEL_PARAMETER)) {
 			ModelLibraryGenerator.start(this, args);
 		} else if (args.contains(BATCH_PARAMETER)) {
@@ -475,12 +458,8 @@ public class HeadlessApplication implements IApplication {
 	 * @return the string
 	 */
 	public String after(final List<String> args, final String arg) {
-		if (args == null || args.size() < 2) {
-			return null;
-		}
-		for (int i = 0; i < args.size() - 1; i++) { if (args.get(i).equals(arg)) {
-			return args.get(i + 1);
-		} }
+		if (args == null || args.size() < 2) return null;
+		for (int i = 0; i < args.size() - 1; i++) { if (args.get(i).equals(arg)) return args.get(i + 1); }
 		return null;
 	}
 
@@ -561,7 +540,7 @@ public class HeadlessApplication implements IApplication {
 	 *             the gama headless exception
 	 */
 	public void buildXMLForModelLibrary(final ArrayList<File> modelPaths, final String outputPath)
-			throws ParserConfigurationException, TransformerException, IOException, GamaHeadlessException {
+			throws ParserConfigurationException, TransformerException, IOException {
 		// "arg[]" are the paths to the different models
 		final ArrayList<IExperimentJob> selectedJob = new ArrayList<>();
 		for (final File modelFile : modelPaths) {
@@ -682,7 +661,7 @@ public class HeadlessApplication implements IApplication {
 		} catch (Exception e) {
 			uri = URI.createURI(pathToModel);
 		}
-		final IModel mdl = builder.compile(uri, errors);
+		final IModelSpecies mdl = builder.compile(uri, errors);
 
 		if (mdl == null) {
 			DEBUG.LOG(
@@ -694,7 +673,7 @@ public class HeadlessApplication implements IApplication {
 		GamaExecutorService.CONCURRENCY_SIMULATIONS.set(true);
 		GamaExecutorService.THREADS_NUMBER.set(processorQueue.getCorePoolSize());
 
-		final IExperimentPlan expPlan = mdl.getExperiment(experimentName);
+		final IExperimentSpecies expPlan = mdl.getExperiment(experimentName);
 		assertIsExperiment(experimentName, expPlan);
 		expPlan.setHeadless(true);
 		expPlan.open();
@@ -734,9 +713,7 @@ public class HeadlessApplication implements IApplication {
 				break;
 			}
 		}
-		if (selectedJob == null) {
-			return;
-		}
+		if (selectedJob == null) return;
 		Globals.OUTPUT_PATH = argOutDir;
 
 		selectedJob.setBufferedWriter(new XMLWriter(Globals.OUTPUT_PATH + "/" + Globals.OUTPUT_FILENAME + ".xml"));
@@ -768,136 +745,11 @@ public class HeadlessApplication implements IApplication {
 	 * @param expPlan
 	 *            the exp plan
 	 */
-	private void assertIsExperiment(final String experimentName, final IExperimentPlan expPlan) {
+	private void assertIsExperiment(final String experimentName, final IExperimentSpecies expPlan) {
 		if (expPlan == null) {
 			DEBUG.LOG("Experiment " + experimentName + " does not exist. Verify its name.");
 			System.exit(-1);
 		}
 	}
 
-	/**
-	 * Escape JSON string.
-	 *
-	 * @param s the string to escape
-	 * @return the escaped string
-	 */
-	private static String escapeJson(String s) {
-		if (s == null) return "";
-		return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
-	}
-
-	/**
-	 * Validate a single GAML file for compilation errors.
-	 *
-	 * @param pathToGamlFile
-	 *            path to the GAML file to validate
-	 */
-	public void validateGamlFile(final String pathToGamlFile) {
-		assertIsAModelFile(pathToGamlFile);
-
-		// Use the pre-configured injector that has proper workspace access
-		final Injector injector = getInjector();
-		final GamlModelBuilder builder = new GamlModelBuilder(injector);
-
-		final List<GamlCompilationError> errors = new ArrayList<>();
-		URI uri;
-		try {
-			uri = URI.createFileURI(pathToGamlFile);
-		} catch (Exception e) {
-			uri = URI.createURI(pathToGamlFile);
-		}
-
-		builder.compile(uri, errors);
-
-		String result = buildValidationJson(pathToGamlFile, errors);
-		System.out.println(result);
-		System.exit(0);
-	}
-
-	/**
-	 * Persistent validation server. Reads file paths from stdin, validates each one,
-	 * and writes JSON diagnostics to stdout. Stays alive until stdin is closed or
-	 * "exit" is received. Avoids reinitializing GAMA for each validation.
-	 */
-	public void validateServer() {
-		configureInjector();
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				line = line.trim();
-				if (line.isEmpty() || "exit".equals(line)) break;
-
-				final String pathToGamlFile = line;
-				if (!GamlFileExtension.isGaml(pathToGamlFile)) {
-					StringBuilder err = new StringBuilder();
-					err.append("{\"file\": \"").append(escapeJson(pathToGamlFile)).append("\",");
-					err.append("\"diagnostics\": [{\"severity\": \"error\", \"message\": \"Not a GAML file\", \"line\": 1}]}");
-					System.out.println(err.toString());
-					System.out.flush();
-					continue;
-				}
-
-				String result;
-				try {
-					final Injector injector = getInjector();
-					final GamlModelBuilder builder = new GamlModelBuilder(injector);
-					final List<GamlCompilationError> errors = new ArrayList<>();
-					URI uri;
-					try {
-						uri = URI.createFileURI(pathToGamlFile);
-					} catch (Exception e) {
-						uri = URI.createURI(pathToGamlFile);
-					}
-					// Discard stale validation context from previous compiles
-					GamlResourceServices.discardValidationContext(uri);
-					builder.compile(uri, errors);
-					result = buildValidationJson(pathToGamlFile, errors);
-				} catch (Exception e) {
-					e.printStackTrace();
-					StringBuilder err = new StringBuilder();
-					err.append("{\"file\": \"").append(escapeJson(pathToGamlFile)).append("\",");
-					err.append("\"diagnostics\": [{\"severity\": \"error\", \"message\": \"").append(escapeJson(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName())).append("\", \"line\": 1}]}");
-					result = err.toString();
-				}
-				System.out.println(result);
-				System.out.flush();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Build JSON output from validation results.
-	 */
-	private String buildValidationJson(final String pathToGamlFile, final List<GamlCompilationError> errors) {
-		StringBuilder json = new StringBuilder();
-		json.append("{");
-		json.append("\"file\": \"").append(escapeJson(pathToGamlFile)).append("\",");
-		json.append("\"diagnostics\": [");
-
-		for (int i = 0; i < errors.size(); i++) {
-			GamlCompilationError error = errors.get(i);
-			json.append("{");
-			json.append("\"severity\": \"")
-					.append(error.isError() ? "error" : (error.isWarning() ? "warning" : "info")).append("\",");
-			json.append("\"message\": \"").append(escapeJson(error.toString())).append("\",");
-
-			int line = 1;
-			try {
-				if (error.getStatement() != null) {
-					org.eclipse.xtext.nodemodel.ICompositeNode node =
-							NodeModelUtils.getNode(error.getStatement());
-					if (node != null) { line = node.getStartLine(); }
-				}
-			} catch (Exception e) {}
-			json.append("\"line\": ").append(line);
-			json.append("}");
-			if (i < errors.size() - 1) { json.append(","); }
-		}
-		json.append("]");
-		json.append("}");
-		return json.toString();
-	}
-
- }
+}
