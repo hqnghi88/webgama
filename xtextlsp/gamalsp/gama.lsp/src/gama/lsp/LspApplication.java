@@ -19,10 +19,12 @@ import org.eclipse.equinox.app.IApplicationContext;
 
 import com.google.inject.Injector;
 
-import gama.core.runtime.GAMA;
-import gama.core.runtime.NullGuiHandler;
-import gama.core.runtime.exceptions.GamaRuntimeException;
+import gama.api.GAMA;
+import gama.api.ui.NullGuiHandler;
+import gama.api.exceptions.GamaRuntimeException;
+import gama.core.CoreActivator;
 import gama.dev.DEBUG;
+import gama.workspace.WorkspaceActivator;
 import gaml.compiler.GamlStandaloneSetup;
 
 /**
@@ -49,11 +51,20 @@ public class LspApplication implements IApplication {
 		System.setProperty("java.awt.headless", "true");
 		GAMA.setHeadLessMode(true);
 		GAMA.setHeadlessGui(new NullGuiHandler());
+		// Trigger gama.workspace lazy activation so WorkspaceActivator registers the workspace
+		WorkspaceActivator.load();
 		try {
 			INJECTOR = GamlStandaloneSetup.doSetup();
 		} catch (final Exception e1) {
 			throw GamaRuntimeException.create(e1, GAMA.getRuntimeScope());
 		}
+		// Activate gama.core AFTER gaml.compiler so that GamaBundleLoader.buildContributions()
+		// finds the ArtefactFactory already registered when it loads GamlAdditions.
+		CoreActivator.load();
+		// Eagerly instantiate Xtext singletons whose constructors read from the fully-loaded
+		// GAML metamodel. Without this they would be created lazily during the first model
+		// validation, which could race against a future async buildContributions() executor.
+		GamlStandaloneSetup.initializeAfterPlatformReady(INJECTOR);
 		return INJECTOR;
 	}
 

@@ -163,6 +163,7 @@
 			Runtimes modules
 		-->
 		<module>../gama.headless</module>
+		<module>../gama.lsp</module>
 
 		<!--
 			Extra modules

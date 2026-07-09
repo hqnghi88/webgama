@@ -46,7 +46,7 @@ export function activate(context: ExtensionContext) {
 
         if (fs.existsSync(bundledServerPath)) {
             let arch = os.arch() === 'arm64' ? 'aarch64' : 'x86_64';
-            let potentialPath = path.join(bundledServerPath, 'Gama.app', 'Contents', 'headless', 'gama-headless.sh');
+            let potentialPath = path.join(bundledServerPath, 'Gama.app', 'Contents', 'headless', 'gama-lsp.sh');
             if (fs.existsSync(potentialPath)) {
                 headlessPath = potentialPath;
             } else {
@@ -73,7 +73,7 @@ export function activate(context: ExtensionContext) {
         const rl = readline.createInterface({ input: gamaProcess.stdout });
         rl.on('line', (line) => {
             console.log('GAMA server stdout:', line);
-            if (pendingResolve) {
+            if (pendingResolve && line.trim().startsWith('{')) {
                 const resolve = pendingResolve;
                 pendingResolve = null;
                 resolve(line);
@@ -195,7 +195,7 @@ export function activate(context: ExtensionContext) {
 
         if (fs.existsSync(bundledServerPath)) {
             let arch = os.arch() === 'arm64' ? 'aarch64' : 'x86_64';
-            let potentialPath = path.join(bundledServerPath, 'Gama.app', 'Contents', 'headless', 'gama-headless.sh');
+            let potentialPath = path.join(bundledServerPath, 'Gama.app', 'Contents', 'headless', 'gama-lsp.sh');
             if (fs.existsSync(potentialPath)) {
                 headlessPath = potentialPath;
             } else {

@@ -43,7 +43,7 @@ export function activate(context: ExtensionContext) {
 
     function startGamaServer() {
         const arch = require('os').arch() === 'arm64' ? 'aarch64' : 'x86_64';
-        const baseGamaPath = `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/products/gama.ui.application.product/macosx/cocoa/${arch}/Gama.app/Contents/headless/gama-headless.sh`;
+        const baseGamaPath = `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/products/gama.ui.application.product/macosx/cocoa/${arch}/Gama.app/Contents/headless/gama-lsp.sh`;
 
         const fs = require('fs');
         let headlessPath = baseGamaPath;
@@ -51,8 +51,8 @@ export function activate(context: ExtensionContext) {
         if (!fs.existsSync(headlessPath)) {
             console.log('Primary GAMA path not found, searching for alternatives...');
             const searchPaths = [
-                `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/products/gama.ui.application.product/macosx/cocoa/x86_64/Gama.app/Contents/headless/gama-headless.sh`,
-                `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/configuration/extraresources/headless/unix/gama-headless.sh`
+                `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/products/gama.ui.application.product/macosx/cocoa/x86_64/Gama.app/Contents/headless/gama-lsp.sh`,
+                `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/configuration/extraresources/headless/unix/gama-lsp.sh`
             ];
 
             for (const searchPath of searchPaths) {
@@ -79,7 +79,7 @@ export function activate(context: ExtensionContext) {
         const rl = readline.createInterface({ input: gamaProcess.stdout });
         rl.on('line', (line) => {
             console.log('GAMA server stdout:', line);
-            if (pendingResolve) {
+            if (pendingResolve && line.trim().startsWith('{')) {
                 const resolve = pendingResolve;
                 pendingResolve = null;
                 resolve(line);
@@ -188,15 +188,15 @@ export function activate(context: ExtensionContext) {
 
     function validateOneShot(document: TextDocument, diagnosticCollection: any) {
         const arch = require('os').arch() === 'arm64' ? 'aarch64' : 'x86_64';
-        const baseGamaPath = `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/products/gama.ui.application.product/macosx/cocoa/${arch}/Gama.app/Contents/headless/gama-headless.sh`;
+        const baseGamaPath = `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/products/gama.ui.application.product/macosx/cocoa/${arch}/Gama.app/Contents/headless/gama-lsp.sh`;
 
         const fs = require('fs');
         let headlessPath = baseGamaPath;
 
         if (!fs.existsSync(headlessPath)) {
             const searchPaths = [
-                `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/products/gama.ui.application.product/macosx/cocoa/x86_64/Gama.app/Contents/headless/gama-headless.sh`,
-                `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/configuration/extraresources/headless/unix/gama-headless.sh`
+                `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/products/gama.ui.application.product/macosx/cocoa/x86_64/Gama.app/Contents/headless/gama-lsp.sh`,
+                `/Users/hqnghi/git/webgama/xtextlsp/gamalsp/gama.product/target/configuration/extraresources/headless/unix/gama-lsp.sh`
             ];
 
             for (const searchPath of searchPaths) {

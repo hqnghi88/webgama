@@ -7,10 +7,11 @@ Require-Bundle: gama.core,
  gaml.compiler,
  org.eclipse.core.runtime,
  gama.dependencies,
+ gama.workspace,
  org.eclipse.xtext
 Bundle-ActivationPolicy: lazy
 Export-Package: gama.lsp
 Import-Package: com.google.inject
 Bundle-ClassPath: .
-Bundle-RequiredExecutionEnvironment: JavaSE-21
+Bundle-RequiredExecutionEnvironment: JavaSE-25
 Automatic-Module-Name: gama.lsp

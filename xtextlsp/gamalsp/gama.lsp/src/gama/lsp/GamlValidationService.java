@@ -21,10 +21,9 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 
 import com.google.inject.Injector;
 
-import gama.core.common.GamlFileExtension;
-import gama.gaml.compilation.GamlCompilationError;
-import gaml.compiler.gaml.resource.GamlResourceServices;
-import gaml.compiler.gaml.validation.GamlModelBuilder;
+import gama.api.constants.GamlFileExtension;
+import gama.api.compilation.GamlCompilationError;
+import gaml.compiler.validation.GamlModelBuilder;
 
 /**
  * Service that validates GAML files and produces JSON diagnostics.
@@ -89,7 +88,6 @@ public class GamlValidationService {
 					} catch (Exception e) {
 						uri = URI.createURI(pathToGamlFile);
 					}
-					GamlResourceServices.discardValidationContext(uri);
 					builder.compile(uri, errors);
 					result = buildValidationJson(pathToGamlFile, errors);
 				} catch (Exception e) {
@@ -120,9 +118,9 @@ public class GamlValidationService {
 
 			int line = 1;
 			try {
-				if (error.getStatement() != null) {
+				if (error.source() != null) {
 					org.eclipse.xtext.nodemodel.ICompositeNode node =
-							NodeModelUtils.getNode(error.getStatement());
+							NodeModelUtils.getNode(error.source());
 					if (node != null) { line = node.getStartLine(); }
 				}
 			} catch (Exception e) {}
