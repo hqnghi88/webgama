@@ -5,16 +5,19 @@ global {
 	int number_of_agents <- 10;
 	string model_name <- "Test GAML Model";
 	
-	init {
+	init { 
 		write "Model " + model_name + " initialized";
-	}
-}
-
-species test_agent {
-	// Agent attributes
+		create test_agent;
+	} 
+} 
+    
+species test_agent {  
+	// Agent attributes 
 	float energy <- rnd(100);
-	point location <- {rnd(100), rnd(100)};
-	
+	point location <- {rnd(100), rnd(100)}; 
+	action toto{
+
+	}
 	// Reflex that runs every step
 	reflex move when: energy > 0 {
 		location <- location + {rnd(2) - 1, rnd(2) - 1};

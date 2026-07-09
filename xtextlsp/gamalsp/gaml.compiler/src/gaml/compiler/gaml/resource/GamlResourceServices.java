@@ -230,6 +230,16 @@ public class GamlResourceServices {
 	}
 
 	/**
+	 * Discard validation context by URI.
+	 *
+	 * @param uri
+	 *            the uri
+	 */
+	public static void discardValidationContext(final URI uri) {
+		resourceErrors.remove(uri);
+	}
+
+	/**
 	 * Returns the path from the root of the workspace
 	 *
 	 * @return an IPath. Never null.

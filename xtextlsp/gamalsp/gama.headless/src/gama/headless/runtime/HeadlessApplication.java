@@ -12,10 +12,12 @@ package gama.headless.runtime;
 
 import static gama.headless.runtime.GamaHeadlessWebSocketServer.startForSecureHeadless;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,6 +67,7 @@ import gama.headless.xml.ConsoleReader;
 import gama.headless.xml.Reader;
 import gama.headless.xml.XMLWriter;
 import gaml.compiler.GamlStandaloneSetup;
+import gaml.compiler.gaml.resource.GamlResourceServices;
 import gaml.compiler.gaml.validation.GamlModelBuilder;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 
@@ -177,6 +180,9 @@ public class HeadlessApplication implements IApplication {
 
 	/** The Constant VALIDATE_GAML_PARAMETER. */
 	final public static String VALIDATE_GAML_PARAMETER = "-validate-gaml";
+
+	/** The Constant VALIDATE_SERVER_PARAMETER. */
+	final public static String VALIDATE_SERVER_PARAMETER = "-validate-server";
 
 	/** The Constant WRITE_XMI. */
 	final public static String WRITE_XMI = "-write-xmi";
@@ -311,7 +317,7 @@ public class HeadlessApplication implements IApplication {
 		// ========================
 		if (args.contains(WRITE_XMI) || args.contains(GAMA_VERSION) || args.contains(HELP_PARAMETER)
 				|| args.contains(VALIDATE_LIBRARY_PARAMETER) || args.contains(TEST_LIBRARY_PARAMETER)
-				|| args.contains(VALIDATE_GAML_PARAMETER)) {
+				|| args.contains(VALIDATE_GAML_PARAMETER) || args.contains(VALIDATE_SERVER_PARAMETER)) {
 			size = size - 1;
 			mustContainOutFolder = mustContainInFile = false;
 		}
@@ -432,6 +438,10 @@ public class HeadlessApplication implements IApplication {
 		if (args.contains(VALIDATE_GAML_PARAMETER)) {
 			validateGamlFile(args.get(args.size() - 1));
 			System.exit(0);
+		}
+		if (args.contains(VALIDATE_SERVER_PARAMETER)) {
+			validateServer();
+			return null;
 		}
 		if (args.contains(CHECK_MODEL_PARAMETER)) {
 			ModelLibraryGenerator.start(this, args);
@@ -799,6 +809,68 @@ public class HeadlessApplication implements IApplication {
 
 		builder.compile(uri, errors);
 
+		String result = buildValidationJson(pathToGamlFile, errors);
+		System.out.println(result);
+		System.exit(0);
+	}
+
+	/**
+	 * Persistent validation server. Reads file paths from stdin, validates each one,
+	 * and writes JSON diagnostics to stdout. Stays alive until stdin is closed or
+	 * "exit" is received. Avoids reinitializing GAMA for each validation.
+	 */
+	public void validateServer() {
+		configureInjector();
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				line = line.trim();
+				if (line.isEmpty() || "exit".equals(line)) break;
+
+				final String pathToGamlFile = line;
+				if (!GamlFileExtension.isGaml(pathToGamlFile)) {
+					StringBuilder err = new StringBuilder();
+					err.append("{\"file\": \"").append(escapeJson(pathToGamlFile)).append("\",");
+					err.append("\"diagnostics\": [{\"severity\": \"error\", \"message\": \"Not a GAML file\", \"line\": 1}]}");
+					System.out.println(err.toString());
+					System.out.flush();
+					continue;
+				}
+
+				String result;
+				try {
+					final Injector injector = getInjector();
+					final GamlModelBuilder builder = new GamlModelBuilder(injector);
+					final List<GamlCompilationError> errors = new ArrayList<>();
+					URI uri;
+					try {
+						uri = URI.createFileURI(pathToGamlFile);
+					} catch (Exception e) {
+						uri = URI.createURI(pathToGamlFile);
+					}
+					// Discard stale validation context from previous compiles
+					GamlResourceServices.discardValidationContext(uri);
+					builder.compile(uri, errors);
+					result = buildValidationJson(pathToGamlFile, errors);
+				} catch (Exception e) {
+					e.printStackTrace();
+					StringBuilder err = new StringBuilder();
+					err.append("{\"file\": \"").append(escapeJson(pathToGamlFile)).append("\",");
+					err.append("\"diagnostics\": [{\"severity\": \"error\", \"message\": \"").append(escapeJson(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName())).append("\", \"line\": 1}]}");
+					result = err.toString();
+				}
+				System.out.println(result);
+				System.out.flush();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Build JSON output from validation results.
+	 */
+	private String buildValidationJson(final String pathToGamlFile, final List<GamlCompilationError> errors) {
 		StringBuilder json = new StringBuilder();
 		json.append("{");
 		json.append("\"file\": \"").append(escapeJson(pathToGamlFile)).append("\",");
@@ -825,9 +897,7 @@ public class HeadlessApplication implements IApplication {
 		}
 		json.append("]");
 		json.append("}");
-
-		System.out.println(json.toString());
-		System.exit(0);
+		return json.toString();
 	}
 
  }
