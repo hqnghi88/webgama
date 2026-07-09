@@ -1,41 +1,33 @@
-# Xtext VS Code example
+# GAML Language Support for VS Code
 
-This is a simple example showing the [Xtext](https://www.eclipse.org/Xtext/) integration for VS Code based on the Microsoft [Language Server Protocol](https://github.com/Microsoft/language-server-protocol).
+GAML (GAMA Modeling Language) language support for Visual Studio Code with a bundled GAMA headless validation server.
 
-The base is following simple grammar
+## Features
 
-```
-Model:
-    greetings+=Greeting*;
-    
-Greeting:
-    'Hello' name=ID ('from' from=[Greeting])? '!';
-```
+- **Syntax Highlighting** — Full syntax highlighting for `.gaml` files
+- **Validation** — Real-time GAML model validation via the GAMA headless server
+- **Error Diagnostics** — Inline error and warning markers as you type
 
-A typical example model would look like (Open a new folder in VSCode and create the files)
+## Requirements
 
-a.mydsl
-```
-Hello Xtext!
-Hello VSCode from Xtext!
-Hello ThisFile from Other!
-Hello you!
-```
+- **Java 21+** — Required to run the GAMA validation server
 
-b.mydsl
-```
-/* this is a definition in another file */
-Hello Other!
-```
+## Extension Settings
 
-The Xtext integration supports typical Xtext and Language Server features like
+This extension contributes the following settings:
 
-* Syntax Highlighting
-* Validation
-* Goto Definition / Find References
-* Hover
-* Formatting
-* Mark Occurrences
-* Open Symbol
+* `gaml.languageServer.enabled`: Enable/disable the GAMA language server
 
-A introductory article can be found [here](https://blogs.itemis.com/en/integrating-xtext-language-support-in-visual-studio-code)
+## Known Issues
+
+- The GAMA full application (~280 MB) is bundled per-platform for validation
+- Initial validation may be slow while the server starts up
+
+## Release Notes
+
+### 0.0.33
+
+- Cross-platform support: macOS (arm64, x64), Linux (x64), Windows (x64)
+- Persistent GAMA LSP validation server
+- Inline error diagnostics with correct line numbers
+- One-shot validation fallback when server is unavailable
