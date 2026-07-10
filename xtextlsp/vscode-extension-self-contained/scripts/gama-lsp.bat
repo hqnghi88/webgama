@@ -1,5 +1,6 @@
 @echo off
 setLocal EnableDelayedExpansion
+cd /d "%~dp0"
 
 set "memory="
 set "args="
